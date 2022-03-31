@@ -12,65 +12,89 @@ import { ColorSchemeName, Pressable } from 'react-native';
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
-import ModalScreen from '../screens/ModalScreen';
-import NotFoundScreen from '../screens/NotFoundScreen';
-import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
-import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
-import LinkingConfiguration from './LinkingConfiguration';
+import ExampleModalScreen from '../screens/ExampleModalScreen';
+import RestaurantDetailScreen from '../screens/RestaurantDetailScreen';
+import RestaurantSearchScreen from '../screens/RestaurantSearchScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import { RestaurantStackParamList, RestaurantStackScreenProps, RootStackParamList, TabParamList, TabScreenProps } from './types';
 
+/**
+ * Navigation model is as follows.
+ * 
+ * RootStackNavigator:
+ * - TabNavigator:
+ *     - RetaurantStackNavigator (default):
+ *         - RestaurantSearchScreen (default)
+ *         - RestaurantDetailScreen (from RestaurantSearchScreen only)
+ *     - SettingsScreen
+ * - ...Modals (any page can navigate to a modal)
+ */
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
     <NavigationContainer
-      linking={LinkingConfiguration}
       theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <RootNavigator />
+      <RootStackNavigator />
     </NavigationContainer>
   );
 }
 
-/**
- * A root stack navigator is often used for displaying modals on top of all other content.
- * https://reactnavigation.org/docs/modal
- */
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
-function RootNavigator() {
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+function RootStackNavigator() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
-      <Stack.Group screenOptions={{ presentation: 'modal' }}>
-        <Stack.Screen name="Modal" component={ModalScreen} />
-      </Stack.Group>
-    </Stack.Navigator>
+    <RootStack.Navigator>
+      <RootStack.Screen name="Tab" component={TabNavigator} options={{ headerShown: false }} />
+      <RootStack.Group screenOptions={{ presentation: 'modal' }}>
+        <RootStack.Screen name="ExampleModal" component={ExampleModalScreen} />
+      </RootStack.Group>
+    </RootStack.Navigator>
   );
 }
 
-/**
- * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
- * https://reactnavigation.org/docs/bottom-tab-navigator
- */
-const BottomTab = createBottomTabNavigator<RootTabParamList>();
-
-function BottomTabNavigator() {
+const Tab = createBottomTabNavigator<TabParamList>();
+function TabNavigator() {
   const colorScheme = useColorScheme();
 
   return (
-    <BottomTab.Navigator
-      initialRouteName="TabOne"
+    <Tab.Navigator
+      initialRouteName="RestaurantStack"
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme].tint,
       }}>
-      <BottomTab.Screen
-        name="TabOne"
-        component={TabOneScreen}
-        options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
-          title: 'Tab One',
+      <Tab.Screen
+        name="RestaurantStack"
+        component={RestaurantStackNavigator}
+        options={{ 
+          headerShown: false,
+          title: 'Search Screen',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+         }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: 'Settings Screen',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+const RestaurantStack = createNativeStackNavigator<RestaurantStackParamList>();
+function RestaurantStackNavigator() {
+  const colorScheme = useColorScheme();
+
+  return (
+    <RestaurantStack.Navigator>
+      <RestaurantStack.Screen
+        name="RestaurantSearch"
+        component={RestaurantSearchScreen}
+        options={(props: RestaurantStackScreenProps<"RestaurantSearch">) => ({
+          title: 'Restaurant Search',
           headerRight: () => (
             <Pressable
-              onPress={() => navigation.navigate('Modal')}
+              onPress={() => props.navigation.navigate('ExampleModal')}
               style={({ pressed }) => ({
                 opacity: pressed ? 0.5 : 1,
               })}>
@@ -83,16 +107,9 @@ function BottomTabNavigator() {
             </Pressable>
           ),
         })}
-      />
-      <BottomTab.Screen
-        name="TabTwo"
-        component={TabTwoScreen}
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-        }}
-      />
-    </BottomTab.Navigator>
+        />
+      <RestaurantStack.Screen name="RestaurantDetail" component={RestaurantDetailScreen}/>
+    </RestaurantStack.Navigator>
   );
 }
 
