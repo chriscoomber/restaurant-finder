@@ -53,10 +53,9 @@ const styles = StyleSheet.create({
   },
   text: {},
   photo: {
-    width: 250,
-    height: 120,
-    borderRadius: 4,
-    marginBottom: 5,
+    width: 300,
+    height: 200,
+    marginVertical: 5,
   }
 });
 

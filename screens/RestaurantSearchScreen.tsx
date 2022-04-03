@@ -33,15 +33,25 @@ function RestaurantSearchScreen(props: RestaurantStackScreenProps<'RestaurantSea
         searchTerm={searchTerm}
         onSearchTermChanged={setSearchTerm}
         onSubmit={() => launchSearch(searchTerm)}/>
-      {
-        searchResults === null ? <Text style={styles.text}>Loading...</Text> : 
-          typeof(searchResults) === 'string' ? <Text style={styles.text}>Error: {searchResults}</Text> : 
-            searchResults.length === 0 ? <Text style={styles.text}>No results found!</Text> : <ScrollView>
-              <RestaurantList headerText='Cheap Eats' results={searchResults.filter(it => it.price === '$')}/>
-              <RestaurantList headerText='Middling Meals' results={searchResults.filter(it => it.price === '$$')}/>
-              <RestaurantList headerText='Dear Dining' results={searchResults.filter(it => it.price === '$$$')}/>
+        { (() => { // Self-invoking function
+          if (searchResults === null) {
+            return <Text style={styles.text}>Loading...</Text>
+          } else if (typeof(searchResults) === 'string') {
+            return <Text style={styles.text}>Error: {searchResults}</Text>
+          } else if (searchResults.length === 0) {
+            return <Text style={styles.text}>No results found!</Text>
+          } else {
+            const cheap = searchResults.filter(it => it.price === '$');
+            const middling = searchResults.filter(it => it.price === '$$');
+            const dear = searchResults.filter(it => it.price === '$$$');
+            // For the bit below, could put the conditional code in the RestaurantList itself
+            return <ScrollView>
+              {cheap.length > 0 && <RestaurantList headerText='Cheap Eats' results={cheap}/>}
+              {middling.length > 0 && <RestaurantList headerText='Middling Meals' results={middling}/>}
+              {dear.length > 0 && <RestaurantList headerText='Dear Dining' results={dear}/>}
             </ScrollView>
-      }
+          }
+        })() }
     </>
   );
 }

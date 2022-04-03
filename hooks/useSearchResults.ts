@@ -71,7 +71,7 @@ export default function useSearchResults<Params, Result>(
       const json = await response.json();
       console.log("Search success: " + params + " " + id);
       const results = jsonParser(json);
-      console.log(results);
+      // console.log(results);
       setSearchResults(results);
 
     } catch (error: any) {
