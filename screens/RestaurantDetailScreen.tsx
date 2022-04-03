@@ -1,12 +1,37 @@
-import { StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { FlatList, Image, StyleSheet } from 'react-native';
+import { BASEURL, DETAIL_ROUTE, HEADERS } from '../apis/yelp';
 
 import { Text, View } from '../components/Themed';
+import useSearchResults from '../hooks/useSearchResults';
 import { RestaurantStackScreenProps } from '../navigation/types';
+import { RestaurantDetailedInfo } from '../types';
 
-function RestaurantDetailScreen(props: RestaurantStackScreenProps<'RestaurantDetail'>) {
+function RestaurantDetailScreen({navigation, route}: RestaurantStackScreenProps<'RestaurantDetail'>) {
+  const { restaurantId } = route.params;
+
+  const [searchResults, launchSearch] = useSearchResults<string, RestaurantDetailedInfo>(
+    (id: string) => ({
+      info: `${BASEURL}${DETAIL_ROUTE(id)}`,
+      init: {
+        method: "get",
+        headers: new Headers(HEADERS)
+      } 
+    }),
+    (json: object) => (json as any)  // TODO: actually validate and error sensibly
+  );
+  useEffect(() => launchSearch(restaurantId), []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{props.route.params.restaurantId}</Text>
+    { searchResults === null ? <Text style={styles.text}>Loading...</Text> : 
+      typeof(searchResults) === 'string' ? <Text style={styles.text}>Error: {searchResults}</Text> : 
+        searchResults.photos.length === 0 ? <Text style={styles.text}>No photos found!</Text> : 
+          <FlatList             
+            data={searchResults.photos}
+            keyExtractor={result => result}
+            renderItem={({item}) => <Image style={styles.photo} source={{uri: item}}/>}/>
+    }
     </View>
   );
 }
@@ -26,6 +51,13 @@ const styles = StyleSheet.create({
     height: 1,
     width: '80%',
   },
+  text: {},
+  photo: {
+    width: 250,
+    height: 120,
+    borderRadius: 4,
+    marginBottom: 5,
+  }
 });
 
 export default RestaurantDetailScreen;
